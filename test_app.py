@@ -14,8 +14,10 @@ def client():
 
 
 def register(client, name="Core-GW-01", url="https://core-gw-01.local"):
-    resp = client.post("/endpoints", data=json.dumps({"name": name, "url": url}),
-                        content_type="application/json")
+    payload = json.dumps({"name": name, "url": url})
+    resp = client.post(
+        "/endpoints", data=payload, content_type="application/json"
+    )
     return resp.get_json()["id"]
 
 
@@ -26,33 +28,42 @@ def test_health_check(client):
 
 
 def test_register_endpoint(client):
-    resp = client.post("/endpoints",
-                        data=json.dumps({"name": "IMS-Node-1", "url": "https://ims1.local"}),
-                        content_type="application/json")
+    payload = json.dumps({"name": "IMS-Node-1", "url": "https://ims1.local"})
+    resp = client.post(
+        "/endpoints", data=payload, content_type="application/json"
+    )
     assert resp.status_code == 201
     assert resp.get_json()["name"] == "IMS-Node-1"
 
 
 def test_register_missing_fields(client):
-    resp = client.post("/endpoints", data=json.dumps({"name": "IncompleteNode"}),
-                        content_type="application/json")
+    payload = json.dumps({"name": "IncompleteNode"})
+    resp = client.post(
+        "/endpoints", data=payload, content_type="application/json"
+    )
     assert resp.status_code == 400
 
 
 def test_report_healthy_check_no_incident(client):
     eid = register(client)
-    resp = client.post(f"/endpoints/{eid}/report",
-                        data=json.dumps({"latency_ms": 80, "up": True}),
-                        content_type="application/json")
+    payload = json.dumps({"latency_ms": 80, "up": True})
+    resp = client.post(
+        f"/endpoints/{eid}/report",
+        data=payload,
+        content_type="application/json",
+    )
     assert resp.status_code == 201
     assert len(incidents) == 0
 
 
 def test_report_down_triggers_critical_incident(client):
     eid = register(client)
-    client.post(f"/endpoints/{eid}/report",
-                data=json.dumps({"latency_ms": 0, "up": False}),
-                content_type="application/json")
+    payload = json.dumps({"latency_ms": 0, "up": False})
+    client.post(
+        f"/endpoints/{eid}/report",
+        data=payload,
+        content_type="application/json",
+    )
     resp = client.get("/incidents")
     body = resp.get_json()
     assert body["incident_count"] == 1
@@ -61,9 +72,12 @@ def test_report_down_triggers_critical_incident(client):
 
 def test_report_high_latency_triggers_warning(client):
     eid = register(client)
-    client.post(f"/endpoints/{eid}/report",
-                data=json.dumps({"latency_ms": 500, "up": True}),
-                content_type="application/json")
+    payload = json.dumps({"latency_ms": 500, "up": True})
+    client.post(
+        f"/endpoints/{eid}/report",
+        data=payload,
+        content_type="application/json",
+    )
     resp = client.get("/incidents")
     body = resp.get_json()
     assert body["incident_count"] == 1
@@ -72,9 +86,12 @@ def test_report_high_latency_triggers_warning(client):
 
 def test_endpoint_status_returns_history(client):
     eid = register(client)
-    client.post(f"/endpoints/{eid}/report",
-                data=json.dumps({"latency_ms": 90, "up": True}),
-                content_type="application/json")
+    payload = json.dumps({"latency_ms": 90, "up": True})
+    client.post(
+        f"/endpoints/{eid}/report",
+        data=payload,
+        content_type="application/json",
+    )
     resp = client.get(f"/endpoints/{eid}/status")
     body = resp.get_json()
     assert body["latest_status"]["latency_ms"] == 90

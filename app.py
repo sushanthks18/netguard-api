@@ -41,8 +41,12 @@ def register_endpoint():
 
     endpoint_id = NEXT_ID["value"]
     NEXT_ID["value"] += 1
-    endpoints[endpoint_id] = {"id": endpoint_id, "name": data["name"],
-                               "url": data["url"], "checks": []}
+    endpoints[endpoint_id] = {
+        "id": endpoint_id,
+        "name": data["name"],
+        "url": data["url"],
+        "checks": [],
+    }
     return jsonify(endpoints[endpoint_id]), 201
 
 
